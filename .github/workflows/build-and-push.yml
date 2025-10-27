@@ -3,12 +3,22 @@ name: Docker Image CI
 on:
   push:
     branches: [ "main" ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Free up space on runner
+      run: |
+        echo "Disk before cleanup:"
+        df -h
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        echo "Disk after cleanup:"
+        df -h
+        
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -19,6 +29,8 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build the Docker image
+      env:
+        DOCKER_BUILDKIT: 1
       run: |
         IMAGE_NAME=kukiamarilla/vllm-deepseekocr-serverless
         TAG=$(date +%s)
