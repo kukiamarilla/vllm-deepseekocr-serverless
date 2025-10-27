@@ -1,0 +1,32 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build the Docker image
+      run: |
+        IMAGE_NAME=kukiamarilla/vllm-deepseekocr-serverless
+        TAG=$(date +%s)
+        docker build . -f Dockerfile -t $IMAGE_NAME:$TAG -t $IMAGE_NAME:latest
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+        echo "TAG=$TAG" >> $GITHUB_ENV
+
+    - name: Push the Docker image
+      run: |
+        docker push $IMAGE_NAME:$TAG
+        docker push $IMAGE_NAME:latest
